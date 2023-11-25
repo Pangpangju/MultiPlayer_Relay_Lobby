@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
+
 
 public class RoomCreated : MonoBehaviour
 {
@@ -10,13 +12,22 @@ public class RoomCreated : MonoBehaviour
 
     private string roomName;
     private int maxPlayers;
-    private string roomId;
+    private string roomID;
+
+    [SerializeField] TMP_Text roomNameShow;
+    [SerializeField] TMP_Text roomPlayerShow;
 
     public void OnRoomClicked() {
         Debug.Log("Room Clicked!");
     }
 
-    void SetRoom(string roomNameInput, int maxPlayersInput, string roomIDInput) { 
-        
+    public void SetRoom(string roomNameInput, int maxPlayersInput, string roomIDInput) {
+        roomName = roomNameInput;
+        maxPlayers = maxPlayersInput;
+        roomID = roomIDInput;
+
+        roomNameShow.text = roomNameInput;
+        roomPlayerShow.text = "1/" + maxPlayers.ToString();
     }
+
 }
