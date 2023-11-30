@@ -6,8 +6,16 @@ using Unity.Services.Lobbies.Models;
 using QFSW.QC;
 using TMPro;
 using UnityEngine.UI;
+using Unity.Services.Relay;
+using Unity.Networking.Transport.Relay;
+using Unity.Netcode;
+using Unity.Netcode.Transports.UTP;
+using Unity.Services.Relay.Models;
+using Unity.Services.Core;
 
-public class LobbyManager : MonoBehaviour
+
+
+public class LobbyManager : NetworkBehaviour
 {
     //void RoomCreate()     방 만들기
     //void RefreshLobby()   로비에 방 만들어지면 초기화
@@ -34,8 +42,11 @@ public class LobbyManager : MonoBehaviour
 
     private float heartbeatTimer;
     private float lobbyUpdateTimer;
+
+    
+
     #endregion
-    #region 2.Start, Update
+    #region 2. Start, Update
     private void Update(){
         HandleLobbyHeartbeat();
         HandleLobbyPollForUpdates();
@@ -44,11 +55,8 @@ public class LobbyManager : MonoBehaviour
     private void Start(){
         playerName.text = "Hello! " + AuthenticationService.Instance.PlayerName;
         leaveRoomButton.onClick.AddListener(LeaveLobby);
-        //callbacks.KickedFromLobby += OnKickedFromLobby;
-        //callbacks.LobbyEventConnectionStateChanged += OnLobbyEventConnectionStateChanged;
     }
     #endregion
-
     #region 3.Lobby
     public async void CreateLobby(){
 
@@ -139,39 +147,25 @@ public class LobbyManager : MonoBehaviour
         }
     }
 
-    void OnLobbyChanged(ILobbyChanges changes) {
+    void OnLobbyChanged(ILobbyChanges changes) {            //이벤트 핸들러 (플레이어 입장, 퇴장시 방 최신화)
         if (changes.PlayerJoined.Changed || changes.PlayerLeft.Changed) {
             changes.ApplyToLobby(joinedLobby);
-            Debug.Log("Player Joined the Room!");
-            Debug.Log(joinedLobby.Players.Count);
-            foreach (Transform child in playerHolder)
-            {
-                Destroy(child.gameObject);
-            }
-
-            foreach (Player player in joinedLobby.Players)
-            {
-                
-                GameObject playerPanel = Instantiate(playerInRoomPrefab, playerHolder);
-                PlayerCreated playerCreated = playerPanel.GetComponent<PlayerCreated>(); 
-                playerCreated.SetPlayer(player.Data["PlayerName"].Value);
-                playerPanel.name = AuthenticationService.Instance.PlayerName;
-            }
-
-
+            RoomRefresh(joinedLobby.Players);
         }
     }
 
-    [Command]
-    private void PrintPlayers() {
-        PrintPlayers(joinedLobby);
-    }
 
-    private void PrintPlayers(Lobby lobby){
-        Debug.Log("Players in Lobby: ");
-        foreach (Player player in lobby.Players)
+    void RoomRefresh(List<Player> players) {                            //방 최신화 하는 함수
+        foreach (Transform child in playerHolder)
         {
-            Debug.Log(player.Id);
+            Destroy(child.gameObject);
+        }
+        foreach (Player player in players)
+        {
+            GameObject playerPanel = Instantiate(playerInRoomPrefab, playerHolder);
+            PlayerCreated playerCreated = playerPanel.GetComponent<PlayerCreated>();
+            playerCreated.SetPlayer(player.Data["PlayerName"].Value);
+            playerPanel.name = AuthenticationService.Instance.PlayerName;
         }
     }
 
@@ -207,15 +201,15 @@ public class LobbyManager : MonoBehaviour
             await Lobbies.Instance.SubscribeToLobbyEventsAsync(roomID, callbacks);
 
             callbacks.LobbyChanged += OnLobbyChanged;
-            Debug.Log("Room Joined:");
             roomPanel.SetActive(true);
+            RoomRefresh(joinedLobby.Players);
         }
         catch (LobbyServiceException e)
         {
             Debug.Log(e);
         }
     }
-
+    [Command]
     private async void MigrateLobbyHost() {
         try {
             hostLobby = await Lobbies.Instance.UpdateLobbyAsync(hostLobby.Id, new UpdateLobbyOptions {
@@ -236,11 +230,54 @@ public class LobbyManager : MonoBehaviour
     }
 
     [Command]
-    private void printName() {
+    private void PrintName() {
         foreach (Player player in joinedLobby.Players)
         {
             Debug.Log(player.Data["PlayerName"].Value);
         }
+    }
+    #endregion
+    #region 4. Relay
+
+
+    [Command]
+    private async void StartGameByHost() {
+        try {
+            Allocation allocation = await Relay.Instance.CreateAllocationAsync(2);      //일단 2로
+            string joinCode = await Relay.Instance.GetJoinCodeAsync(allocation.AllocationId);
+            Debug.Log(joinCode);
+
+
+            RelayServerData relayServerData = new RelayServerData(allocation, "dtls");
+
+            NetworkManager.Singleton.GetComponent<UnityTransport>().SetRelayServerData(relayServerData);
+
+            NetworkManager.Singleton.StartHost();
+        } catch (RelayServiceException e) {Debug.Log(e);}
+
+        
+    }
+    [Command]
+    private async void JoinRelay(string joinCode)
+    {
+        try
+        {
+            Debug.Log("Joining Relay with:" + joinCode);
+            JoinAllocation joinAllocation = await RelayService.Instance.JoinAllocationAsync(joinCode);
+
+            RelayServerData relayServerData = new RelayServerData(joinAllocation, "dtls");
+
+            NetworkManager.Singleton.GetComponent<UnityTransport>().SetRelayServerData(relayServerData);
+
+            NetworkManager.Singleton.StartClient();
+        }
+        catch (RelayServiceException e) { Debug.Log(e); }
+    }
+
+    [Command]
+    [ClientRpc]
+    void testClientRpc(string text) {
+        Debug.Log(text);
     }
     #endregion
 }
