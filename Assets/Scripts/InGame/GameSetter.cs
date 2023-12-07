@@ -3,35 +3,37 @@ using UnityEngine;
 using Unity.Services.Authentication;
 using Unity.Services.Lobbies;
 using Unity.Services.Lobbies.Models;
-
+using QFSW.QC;
 using Unity.Netcode;
-
-
 
 public class GameSetter : NetworkBehaviour
 {
-    [SerializeField] Transform playerPrefab;
 
-    private GameObject _host;
-    private GameObject _client;
+    [SerializeField] private GameObject _host;
+    [SerializeField] private GameObject _client;
     void Start()
     {
-        Debug.Log(IsHost);
-        Debug.Log(IsServer);
-        Debug.Log(IsClient);
+        
         if (IsHost)
         {
-            _host = Instantiate(playerPrefab, new Vector3(0, 0, 0), Quaternion.identity).gameObject;
-            _host.GetComponent<NetworkObject>().SpawnAsPlayerObject(NetworkManager.Singleton.LocalClientId);
+            
+            Instantiate(_host, new Vector3(0, 0, 0), Quaternion.identity).GetComponent<NetworkObject>().SpawnAsPlayerObject(NetworkManager.Singleton.LocalClientId);
+            Debug.Log("Spawned as Host");
+            foreach (var Clients in NetworkManager.Singleton.ConnectedClientsList)
+            {
+                if(Clients.ClientId > 0)        //호스트만
+                Instantiate(_client, new Vector3(Clients.ClientId, 0, 0), Quaternion.identity).GetComponent<NetworkObject>().SpawnAsPlayerObject(Clients.ClientId);
+            }
         }
-        //else SpawnAllClientsServerRpc(NetworkManager.Singleton.LocalClientId);
+
     }
+    [Command]
+    private void PrintPlayers() {
+        Debug.Log("Connected Players: " + NetworkManager.Singleton.ConnectedClientsList.Count);
+        foreach (var Clients in NetworkManager.Singleton.ConnectedClientsList)
+        {
 
-
-
-    [ServerRpc(RequireOwnership = false)]
-    void SpawnAllClientsServerRpc(ulong clientId) {
-        _client = Instantiate(playerPrefab, new Vector3(0, 0, 0), Quaternion.identity).gameObject;
-        _client.GetComponent<NetworkObject>().SpawnAsPlayerObject(clientId);
+            Debug.Log("Connected PlayerId: " + Clients.ClientId);
+        }
     }
 }

@@ -14,7 +14,7 @@ using Unity.Services.Relay.Models;
 using UnityEngine.SceneManagement;
 
 
-public class LobbyManager : MonoBehaviour
+public class LobbyManager : NetworkBehaviour
 {
     //void RoomCreate()     방 만들기
     //void RefreshLobby()   로비에 방 만들어지면 초기화
@@ -149,7 +149,7 @@ public class LobbyManager : MonoBehaviour
 
                 if (joinedLobby.Data["START_GAME"].Value != "0") { //게임 시작
                     if (!isLobbyHost) {
-                        JoinRelay(joinedLobby.Data["START_GAME"].Value);
+                        //JoinRelay(joinedLobby.Data["START_GAME"].Value);
                     }
                 }
 
@@ -162,6 +162,11 @@ public class LobbyManager : MonoBehaviour
         if (changes.PlayerJoined.Changed || changes.PlayerLeft.Changed) {
             changes.ApplyToLobby(joinedLobby);
             RoomRefresh(joinedLobby.Players);
+        }
+
+        if (changes.Data.Changed) {
+            changes.ApplyToLobby(joinedLobby);
+            JoinRelay(joinedLobby.Data["START_GAME"].Value);
         }
     }
 
@@ -259,7 +264,9 @@ public class LobbyManager : MonoBehaviour
                 RelayServerData relayServerData = new RelayServerData(allocation, "dtls");
                 NetworkManager.Singleton.GetComponent<UnityTransport>().SetRelayServerData(relayServerData);
                 NetworkManager.Singleton.StartHost();
+
                 NetworkManager.Singleton.SceneManager.LoadScene("InGameScreen",LoadSceneMode.Single);
+
             }
             catch (RelayServiceException e) { Debug.Log(e); }
         }
@@ -270,14 +277,11 @@ public class LobbyManager : MonoBehaviour
     private async void JoinRelay(string joinCode)
     {
         try
-        {
-            Debug.Log("Joining Relay with:" + joinCode);
-            
+        { 
             JoinAllocation joinAllocation = await RelayService.Instance.JoinAllocationAsync(joinCode);
             RelayServerData relayServerData = new RelayServerData(joinAllocation, "dtls");
             NetworkManager.Singleton.GetComponent<UnityTransport>().SetRelayServerData(relayServerData);
             NetworkManager.Singleton.StartClient();
-            NetworkManager.Singleton.SceneManager.LoadScene("InGameScreen", LoadSceneMode.Single);
         }
         catch (RelayServiceException e) { Debug.Log(e); }
     }

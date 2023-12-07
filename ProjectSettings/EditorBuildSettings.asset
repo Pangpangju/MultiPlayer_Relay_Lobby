@@ -14,4 +14,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/InGameScreen.unity
     guid: a86c9648e1d64fe4d9f08536fff741bc
+  - enabled: 0
+    path: Assets/Scenes/RelayTestSceen.unity
+    guid: 68f7e60e1a1971f40b3581896e943c60
   m_configObjects: {}

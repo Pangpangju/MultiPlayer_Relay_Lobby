@@ -1120,7 +1120,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4845276930943762971, guid: 2da3dcc22749e7f4280737786d898334, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: 0.000015258789
+      value: 0.000030517578
       objectReference: {fileID: 0}
     - target: {fileID: 4845637959249703711, guid: 2da3dcc22749e7f4280737786d898334, type: 3}
       propertyPath: m_AnchorMax.y
@@ -2782,6 +2782,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1347513673}
   - component: {fileID: 1347513672}
+  - component: {fileID: 1347513674}
   m_Layer: 0
   m_Name: Directional Light
   m_TagString: Untagged
@@ -2866,6 +2867,29 @@ Transform:
   m_Children: []
   m_Father: {fileID: 541477723}
   m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
+--- !u!114 &1347513674
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1347513671}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 474bcb49853aa07438625e644c072ee6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Version: 3
+  m_UsePipelineSettings: 1
+  m_AdditionalLightsShadowResolutionTier: 2
+  m_LightLayerMask: 1
+  m_RenderingLayers: 1
+  m_CustomShadowLayers: 0
+  m_ShadowLayerMask: 1
+  m_ShadowRenderingLayers: 1
+  m_LightCookieSize: {x: 1, y: 1}
+  m_LightCookieOffset: {x: 0, y: 0}
+  m_SoftShadowQuality: 0
 --- !u!1 &1360427609
 GameObject:
   m_ObjectHideFlags: 0
@@ -4205,6 +4229,7 @@ MonoBehaviour:
   leaveRoomButton: {fileID: 1103007314}
   roomPanel: {fileID: 1538415574}
   startGameButton: {fileID: 0}
+  playerPrefab: {fileID: 0}
 --- !u!1 &1984197786
 GameObject:
   m_ObjectHideFlags: 0
