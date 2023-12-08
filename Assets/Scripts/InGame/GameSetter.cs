@@ -14,19 +14,26 @@ public class GameSetter : NetworkBehaviour
     void Start()
     {
         
-        if (IsHost)
-        {
-            
-            Instantiate(_host, new Vector3(0, 0, 0), Quaternion.identity).GetComponent<NetworkObject>().SpawnAsPlayerObject(NetworkManager.Singleton.LocalClientId);
-            Debug.Log("Spawned as Host");
-            foreach (var Clients in NetworkManager.Singleton.ConnectedClientsList)
-            {
-                if(Clients.ClientId > 0)        //호스트만
-                Instantiate(_client, new Vector3(Clients.ClientId, 0, 0), Quaternion.identity).GetComponent<NetworkObject>().SpawnAsPlayerObject(Clients.ClientId);
-            }
-        }
+
 
     }
+    [Command]
+    private void CreatePlayers()
+    { 
+        if (IsHost)
+        {
+           
+            foreach (var Clients in NetworkManager.Singleton.ConnectedClientsList)
+            {
+                GameObject playerAvatar;
+                playerAvatar = Instantiate(_client, new Vector3(Clients.ClientId, 0, 0), Quaternion.identity);
+                playerAvatar.name = "Player " + Clients.ClientId;
+                playerAvatar.GetComponent<NetworkObject>().SpawnWithOwnership(Clients.ClientId);
+            }
+        }
+        
+    }
+
     [Command]
     private void PrintPlayers() {
         Debug.Log("Connected Players: " + NetworkManager.Singleton.ConnectedClientsList.Count);

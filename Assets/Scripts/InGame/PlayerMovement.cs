@@ -4,7 +4,7 @@ using Unity.Netcode;
 using UnityEngine;
 using Cinemachine;
 
-public class PlayerMovement : MonoBehaviour
+public class PlayerMovement : NetworkBehaviour
 {
     [SerializeField] CharacterController _CC;
     [SerializeField] Animator _AM;
@@ -27,25 +27,25 @@ public class PlayerMovement : MonoBehaviour
     public float movementSpeed;
     public float rotationSpeed;
 
-    //public override void OnNetworkSpawn()
-    //{
-        /*
+    public override void OnNetworkSpawn()
+    {
+
         if (IsOwner)
         {
+            Debug.Log("IsOwner");
             listener.enabled = true;
             _VC.Priority = 1;
         }
         else
         {
+            Debug.Log("Is Not Owner");
             _VC.Priority = 0;
-        }*/
-    //}
+        }
+    }
 
 
     private void Start()
     {
-        listener.enabled = true;
-        _VC.Priority = 1;
         cam = Camera.main.transform;
     }
 
@@ -56,7 +56,7 @@ public class PlayerMovement : MonoBehaviour
     }
     private void FixedUpdate()
     {
-        //if (!IsOwner) return;
+        if (!IsOwner) return;
 
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 
